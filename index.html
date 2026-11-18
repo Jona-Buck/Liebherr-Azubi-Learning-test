@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f5f7">
+  <meta name="description" content="AZUBI.ACADEMY – strukturiert lernen und für die IHK-Prüfung Elektroniker für Betriebstechnik üben.">
+  <title>AZUBI.ACADEMY</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Zum Inhalt springen</a>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Hauptnavigation">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">A</div>
+        <div class="brand-copy"><strong>AZUBI<span>.</span>ACADEMY</strong><small>Dein Lernbereich</small></div>
+        <button class="icon-button sidebar-close" id="sidebar-close" aria-label="Navigation schließen">×</button>
+      </div>
+      <div class="sidebar-label">LERNEN</div>
+      <nav class="nav-list">
+        <button class="nav-item active" data-view="dashboard"><span class="nav-icon">⌂</span><span>Übersicht</span></button>
+        <button class="nav-item" data-view="modules"><span class="nav-icon">▤</span><span>Lernmodule</span><span class="nav-count">4</span></button>
+        <button class="nav-item" data-view="exam"><span class="nav-icon">◷</span><span>Prüfungssimulation</span></button>
+        <button class="nav-item" data-view="flashcards"><span class="nav-icon">▱</span><span>Karteikarten</span></button>
+        <button class="nav-item" data-view="assistant"><span class="nav-icon">✳</span><span>Lernassistent</span><span class="nav-dot"></span></button>
+      </nav>
+      <div class="sidebar-label sidebar-label-spaced">DEIN FORTSCHRITT</div>
+      <nav class="nav-list">
+        <button class="nav-item" data-view="results"><span class="nav-icon">◫</span><span>Auswertung</span></button>
+        <button class="nav-item" data-view="favorites"><span class="nav-icon">♡</span><span>Merkliste</span></button>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-bottom">
+        <div class="sidebar-progress">
+          <div class="progress-top"><span>Dein Lernziel</span><strong id="sidebar-progress-label">0 %</strong></div>
+          <div class="progress-track"><span id="sidebar-progress-bar" style="width:0%"></span></div>
+          <small>Jeder Schritt zählt.</small>
+        </div>
+        <button class="nav-item" data-view="settings"><span class="nav-icon">⚙</span><span>Einstellungen</span></button>
+        <button class="profile-row" id="profile-button">
+          <span class="avatar">A</span><span class="profile-copy"><strong>Alex Müller</strong><small>Auszubildende:r</small></span><span class="profile-more">···</span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="mobile-scrim" id="mobile-scrim"></div>
+    <section class="workspace">
+      <header class="topbar">
+        <div class="topbar-leading">
+          <button class="icon-button menu-button" id="menu-button" aria-label="Navigation öffnen">☰</button>
+          <div class="breadcrumb"><span>AZUBI.ACADEMY</span><i>/</i><strong id="breadcrumb-current">Übersicht</strong></div>
+        </div>
+        <div class="topbar-actions">
+          <button class="search-trigger" id="search-trigger"><span>⌕</span><span class="search-placeholder">Suchen</span><kbd>⌘ K</kbd></button>
+          <button class="icon-button theme-toggle" id="theme-toggle" aria-label="Darstellung wechseln" title="Darstellung wechseln">◐</button>
+          <button class="top-avatar" id="top-avatar" aria-label="Profil">A</button>
+        </div>
+      </header>
+      <main id="main-content" class="main-content" tabindex="-1">
+        <div id="view" aria-live="polite"></div>
+      </main>
+      <footer class="app-footer"><span>AZUBI.ACADEMY</span><span>Eine Lernplattform für deine Ausbildung</span><span class="demo-note">Lokale Demo · Lernstände bleiben in diesem Browser</span></footer>
+    </section>
+  </div>
+
+  <dialog class="search-dialog" id="search-dialog">
+    <div class="search-dialog-inner">
+      <div class="search-input-row"><span>⌕</span><input id="global-search" type="search" placeholder="Themen, Module und Fragen suchen …" autocomplete="off"><kbd>ESC</kbd></div>
+      <div class="search-results" id="search-results"><p class="search-hint">Suche nach einem Fachthema, zum Beispiel „Ohmsches Gesetz“.</p></div>
+    </div>
+  </dialog>
+  <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>
