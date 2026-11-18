@@ -10,6 +10,10 @@
 - [ ] Übungsrunde kann für alle Fachbereiche gestartet werden.
 - [ ] Single-Choice-Fragen können beantwortet und ausgewertet werden.
 - [ ] Richtig/Falsch-Fragen können beantwortet und ausgewertet werden.
+- [ ] Mehrfachauswahl bewertet nur die vollständige richtige Auswahl als korrekt.
+- [ ] Rechenaufgaben akzeptieren Dezimalkomma und Dezimalpunkt.
+- [ ] Zuordnungsaufgaben speichern jede Auswahl und bewerten die Zuordnung.
+- [ ] Freitextaufgaben werden als Selbstkontrolle gekennzeichnet und nicht automatisch bewertet.
 - [ ] Lernmodus zeigt Feedback direkt nach dem Prüfen.
 - [ ] Testmodus zeigt die Auswertung am Ende.
 - [ ] Karteikarten lassen sich aufdecken und bewerten.
