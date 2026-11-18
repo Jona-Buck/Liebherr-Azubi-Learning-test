@@ -102,21 +102,40 @@
   function renderDashboard() {
     const done = state.completed.length, total = lessonCount(), pct = progress();
     const today = new Intl.DateTimeFormat('de-DE',{weekday:'long',day:'numeric',month:'long'}).format(new Date());
-    let subjectCards = subjects.map(s => {
-      const mod = modules.find(m=>m.id===s.id); const n = mod.lessons.filter(l=>state.completed.includes(l.id)).length; const p = Math.round(n/mod.lessons.length*100);
-      return '<article class="subject-card" data-module="'+s.id+'"><div class="subject-top"><span class="subject-icon" style="background:'+s.color+';color:'+s.ink+'">'+s.icon+'</span><span class="pill">'+s.lessons+' Kapitel</span></div><h3>'+s.name+'</h3><p>'+s.desc+'</p><div class="subject-foot"><span>'+n+' von '+mod.lessons.length+' abgeschlossen</span><strong>'+p+'%</strong></div><div class="mini-progress"><span style="width:'+p+'%"></span></div></article>';
+    const courseRows = subjects.map(s => {
+      const mod = modules.find(m => m.id === s.id);
+      const n = mod.lessons.filter(l => state.completed.includes(l.id)).length;
+      const p = Math.round(n / mod.lessons.length * 100);
+      return '<button type="button" class="course-row" data-module="' + s.id + '">' +
+        '<span class="course-glyph" style="background:' + s.color + ';color:' + s.ink + '">' + s.icon + '</span>' +
+        '<span class="course-info"><strong>' + s.name + '</strong><small>' + s.desc + '</small></span>' +
+        '<span class="course-progress"><strong>' + p + ' %</strong><span class="course-track"><i style="width:' + p + '%"></i></span><small>' + n + ' von ' + mod.lessons.length + ' Kapiteln</small></span>' +
+        '<span class="course-chevron" aria-hidden="true">›</span></button>';
     }).join('');
-    const bars = [22,38,30,65,44,80,56].map((v,i)=>'<div class="activity-day"><div class="activity-bar '+(i===6?'current':'')+'" style="height:'+v+'%"></div><small>'+['Mo','Di','Mi','Do','Fr','Sa','So'][i]+'</small></div>').join('');
     const recent = state.attempts.slice(-3).reverse();
-    const recentHtml = recent.length ? recent.map(a=>'<div class="recommendation"><div class="recommendation-icon">✓</div><div><strong>'+esc(a.title)+'</strong><p>'+esc(a.date)+' · '+a.score+' % richtig</p></div></div>').join('') : '<div class="empty-state" style="padding:18px 8px"><p>Noch keine abgeschlossenen Übungen. Starte mit einer kurzen Wissensrunde.</p></div>';
-    return pageHead('DEIN LERNPLATZ','Schön, dass du da bist, '+esc(state.userName)+'.','Mach heute einen kleinen Schritt – dein Lernfortschritt entsteht Einheit für Einheit.','<span class="date-label">'+today+'</span>')+
-      '<div class="grid stats-grid">'+
-      '<div class="stat-card"><div class="stat-top"><span>Lernfortschritt</span><span class="stat-icon">↗</span></div><div class="stat-value">'+pct+'<span style="font-size:14px;color:var(--muted)"> %</span></div><div class="stat-foot">'+done+' von '+total+' Lernkapiteln abgeschlossen</div></div>'+
-      '<div class="stat-card"><div class="stat-top"><span>Abgeschlossene Kapitel</span><span class="stat-icon">✓</span></div><div class="stat-value">'+done+'</div><div class="stat-foot">Dein Wissen wächst Schritt für Schritt</div></div>'+
-      '<div class="stat-card"><div class="stat-top"><span>Übungsrunden</span><span class="stat-icon">◷</span></div><div class="stat-value">'+state.attempts.length+'</div><div class="stat-foot">Bisher gespeicherte Ergebnisse</div></div>'+
-      '<div class="stat-card"><div class="stat-top"><span>Merkliste</span><span class="stat-icon">♡</span></div><div class="stat-value">'+state.favorites.length+'</div><div class="stat-foot">Inhalte für später vorgemerkt</div></div></div>'+
-      '<div class="continue-card"><div class="continue-copy"><div class="eyebrow">WEITERLERNEN</div><h2>Dein nächster Schritt wartet schon.</h2><p>Setze dort fort, wo du zuletzt aufgehört hast – oder entdecke ein neues Thema.</p><div class="continue-meta"><span>◷ 15 Minuten</span><span>·</span><span>Elektrotechnik</span></div></div><button class="button" data-action="continue">Lernen fortsetzen <span>→</span></button></div>'+
-      '<div class="grid dashboard-grid"><section><div class="panel" style="margin-bottom:17px">'+panelHead('Deine Fachbereiche','Wähle einen Bereich und arbeite dich durch die Kapitel.')+'<div class="grid subject-grid">'+subjectCards+'</div></div><div class="panel">'+panelHead('Lernaktivität','Eine kleine Demo-Ansicht deiner Lernwoche.')+'<div class="activity-bars">'+bars+'</div><div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--subtle);font-size:9px"><span>Weniger aktiv</span><span>Mehr aktiv</span></div></div></section><aside><div class="panel" style="margin-bottom:17px">'+panelHead('Empfohlen für dich','Ein guter Einstieg für heute.')+'<div class="recommendation"><div class="recommendation-icon">ϟ</div><div><strong>Das Ohmsche Gesetz</strong><p>Die wichtigste Beziehung in vielen elektrotechnischen Berechnungen.</p><button class="text-link" data-action="open-lesson" data-module="elektro" data-lesson="e2">Kapitel öffnen →</button></div></div><div class="recommendation"><div class="recommendation-icon">◷</div><div><strong>Kurze Wissensrunde</strong><p>Teste dein Wissen mit 10 Übungsfragen.</p><button class="text-link" data-view="exam">Simulation starten →</button></div></div></div><div class="panel">'+panelHead('Letzte Aktivitäten','Deine zuletzt abgeschlossenen Übungen.')+recentHtml+'</div></aside></div>';
+    const recentHtml = recent.length
+      ? recent.map(a => '<div class="recent-row"><span class="recent-check">✓</span><span class="recent-copy"><strong>' + esc(a.title) + '</strong><small>' + esc(a.date) + '</small></span><strong class="recent-score">' + a.score + ' %</strong></div>').join('')
+      : '<div class="recent-empty"><span class="recent-empty-icon">◷</span><div><strong>Noch keine Übungsrunde absolviert</strong><p>Starte eine kurze Wissensrunde und deine Ergebnisse erscheinen hier.</p><button class="text-link" data-view="exam">Prüfungssimulation öffnen →</button></div></div>';
+    const firstOpenModule = modules.find(m => m.lessons.some(l => !state.completed.includes(l.id))) || modules[0];
+    const firstOpenLesson = firstOpenModule.lessons.find(l => !state.completed.includes(l.id)) || firstOpenModule.lessons[0];
+    return '<div class="home-page">' +
+      '<header class="home-heading"><div><div class="home-date">' + today + '</div><h1>Guten Tag, ' + esc(state.userName) + '.</h1><p>Bereit für den nächsten Schritt deiner Ausbildung?</p></div><button class="button primary home-continue" data-action="continue">Weiterlernen <span>→</span></button></header>' +
+      '<section class="home-overview" aria-label="Dein Lernfortschritt">' +
+        '<div class="overview-main"><div class="eyebrow">DEIN LERNFORTSCHRITT</div><div class="overview-number">' + pct + '<span>%</span></div><p>' + done + ' von ' + total + ' Lernkapiteln abgeschlossen</p><div class="overview-track"><span style="width:' + pct + '%"></span></div></div>' +
+        '<div class="overview-metric"><span>Abgeschlossene Kapitel</span><strong>' + done + '<small> / ' + total + '</small></strong></div>' +
+        '<div class="overview-metric"><span>Übungsrunden</span><strong>' + state.attempts.length + '</strong></div>' +
+        '<div class="overview-metric"><span>Merkliste</span><strong>' + state.favorites.length + '</strong></div>' +
+      '</section>' +
+      '<div class="home-main-grid">' +
+        '<section class="home-courses"><div class="home-section-heading"><div><div class="eyebrow">DEINE AUSBILDUNG</div><h2>Deine Lernbereiche</h2><p>Wähle ein Thema und arbeite dich Schritt für Schritt durch die Inhalte.</p></div><button class="text-link" data-view="modules">Alle Lernmodule →</button></div>' +
+          '<div class="course-list">' + courseRows + '</div></section>' +
+        '<aside class="home-aside">' +
+          '<section class="next-lesson-card"><div class="eyebrow">DEIN NÄCHSTER SCHRITT</div><div class="next-lesson-icon" style="background:' + firstOpenModule.color + ';color:' + firstOpenModule.ink + '">' + subjects.find(s => s.id === firstOpenModule.id).icon + '</div><h3>' + esc(firstOpenLesson.title) + '</h3><p>' + esc(firstOpenLesson.summary) + '</p><div class="next-lesson-meta">' + esc(firstOpenModule.title) + ' <span>·</span> ' + esc(firstOpenLesson.duration) + '</div><button class="button primary" data-action="open-lesson" data-module="' + firstOpenModule.id + '" data-lesson="' + firstOpenLesson.id + '">Kapitel öffnen <span>→</span></button></section>' +
+          '<section class="home-quick-panel"><div class="eyebrow">SCHNELLZUGRIFF</div><button class="quick-link" data-view="exam"><span class="quick-symbol">◷</span><span><strong>Prüfungssimulation</strong><small>Wissen testen und auswerten</small></span><span>›</span></button><button class="quick-link" data-view="flashcards"><span class="quick-symbol">▤</span><span><strong>Karteikarten</strong><small>Begriffe wiederholen</small></span><span>›</span></button><button class="quick-link" data-view="assistant"><span class="quick-symbol">✳</span><span><strong>Lernassistent</strong><small>Erklärungen zu Fachthemen</small></span><span>›</span></button></section>' +
+        '</aside>' +
+      '</div>' +
+      '<section class="home-recent"><div class="home-section-heading"><div><div class="eyebrow">DEIN VERLAUF</div><h2>Letzte Übungsrunden</h2></div><button class="text-link" data-view="results">Alle Ergebnisse →</button></div><div class="recent-list">' + recentHtml + '</div></section>' +
+    '</div>';
   }
   function renderModules() {
     const cardsHtml = modules.map(m => {
