@@ -9,7 +9,7 @@ Diese erste Version ist ein **statischer Frontend-Prototyp**, der direkt über G
 Enthalten:
 - Dashboard mit Lernfortschritt und Fachbereichen
 - Lernmodule mit Kapiteln, Erklärungen, Formeln und Beispielen
-- Übungsrunden mit Single-Choice- und Richtig/Falsch-Fragen
+- Übungsrunden mit Single-Choice, Mehrfachauswahl, Richtig/Falsch, Rechenaufgaben, Zuordnungen und Freitext-Selbstkontrolle
 - Sofortfeedback und Auswertung
 - Karteikarten
 - Merkliste
