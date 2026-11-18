@@ -151,7 +151,7 @@
     } else if(q.type==='text') {
       controlHtml='<div class="field"><label class="field-label" for="exam-text">Deine Erklärung</label><textarea class="text-field" id="exam-text" placeholder="Formuliere deine Antwort in eigenen Worten …" '+(ex.checked?'disabled':'')+'>'+esc(selected||'')+'</textarea></div>';
     } else if(q.type==='matching') {
-      controlHtml='<div class="answer-list">'+q.pairs.map((pair,i)=>'<div class="answer-option"><span class="answer-letter">'+(i+1)+'</span><span style="flex:1">'+esc(pair)+'</span><select class="select-field match-select" data-match-index="'+i+'" style="max-width:190px" '+(ex.checked?'disabled':'')+'><option value="">Zuordnen …</option>'+q.options.map((o,j)=>'<option value="'+j+'" '+(selected&&Number(selected[i])===j?'selected':'')+'>'+esc(o)+'</option>').join('')+'</select></div>').join('')+'</div>';
+      controlHtml='<div class="answer-list">'+q.pairs.map((pair,i)=>'<div class="answer-option"><span class="answer-letter">'+(i+1)+'</span><span style="flex:1">'+esc(pair)+'</span><select class="select-field match-select" data-match-index="'+i+'" style="max-width:190px" '+(ex.checked?'disabled':'')+'><option value="">Zuordnen …</option>'+q.options.map((o,j)=>'<option value="'+j+'" '+(selected&&selected[i]!==null&&selected[i]!==undefined&&Number(selected[i])===j?'selected':'')+'>'+esc(o)+'</option>').join('')+'</select></div>').join('')+'</div>';
       isAnswered=Array.isArray(selected)&&selected.length===q.pairs.length&&selected.every(v=>v!==null&&v!==undefined&&v!=='');
     } else {
       const opts=q.type==='truefalse'?['Richtig','Falsch']:q.options;
@@ -254,7 +254,7 @@
       return Number.isFinite(num)&&Math.abs(num-Number(q.answer))<=Number(q.tolerance||0.001);
     }
     if(q.type==='multiple'||q.type==='matching') {
-      if(!Array.isArray(value))return false;
+      if(!Array.isArray(value)||value.some(v=>v===null||v===undefined||v===''))return false;
       const a=value.slice().map(Number).sort((x,y)=>x-y);
       const b=q.answer.slice().map(Number).sort((x,y)=>x-y);
       return a.length===b.length&&a.every((v,i)=>v===b[i]);
