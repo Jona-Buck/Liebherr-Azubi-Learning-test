@@ -62,6 +62,10 @@
     {id:'q8',subject:'mathe',topic:'Formeln umstellen',type:'single',difficulty:'Mittel',text:'Die Formel P = U · I soll nach I umgestellt werden. Welche Form ist richtig?',options:['I = P · U','I = U / P','I = P / U','I = P − U'],answer:2,explanation:'Beide Seiten durch U teilen: I = P / U.'},
     {id:'q9',subject:'wiso',topic:'Sozialversicherung',type:'single',difficulty:'Einfach',text:'Welcher Versicherungszweig ist insbesondere für Arbeits- und Wegeunfälle zuständig?',options:['Rentenversicherung','Unfallversicherung','Arbeitslosenversicherung','Pflegeversicherung'],answer:1,explanation:'Die gesetzliche Unfallversicherung ist für Arbeits- und Wegeunfälle zuständig.'},
     {id:'q10',subject:'wiso',topic:'Lohn und Gehalt',type:'truefalse',difficulty:'Einfach',text:'Das Nettoentgelt ist in der Regel höher als das Bruttoentgelt.',answer:false,explanation:'Das Nettoentgelt ist der Auszahlungsbetrag nach Abzug von Steuern und Arbeitnehmeranteilen.'}
+    ,{id:'q11',subject:'elektro',topic:'Reihenschaltung',type:'multiple',difficulty:'Mittel',text:'Welche Aussagen zur Reihenschaltung sind richtig? Wähle alle passenden Antworten.',options:['Durch alle Bauteile fließt derselbe Strom.','An jedem Bauteil liegt dieselbe Spannung.','Die Teilspannungen addieren sich zur Gesamtspannung.','Die Einzelwiderstände addieren sich zum Gesamtwiderstand.'],answer:[0,2,3],explanation:'In der Reihenschaltung ist der Strom überall gleich. Die Teilspannungen und Widerstände addieren sich.'}
+    ,{id:'q12',subject:'mathe',topic:'Elektrische Arbeit',type:'calculation',difficulty:'Mittel',text:'Ein Verbraucher mit 0,5 kW Leistung läuft 3 Stunden. Wie groß ist die elektrische Arbeit in kWh?',unit:'kWh',answer:1.5,tolerance:0.01,explanation:'W = P · t = 0,5 kW · 3 h = 1,5 kWh.'}
+    ,{id:'q13',subject:'steuerung',topic:'Steuern und Regeln',type:'text',difficulty:'Anspruchsvoll',text:'Erkläre kurz den Unterschied zwischen Steuern und Regeln.',answer:'Bei einer Regelung wird die tatsächliche Ausgangsgröße zurückgeführt und mit dem Sollwert verglichen. Bei einer Steuerung gibt es keine solche Rückführung.',explanation:'Bei einer Regelung wird die Regelgröße erfasst und mit dem Sollwert verglichen. Die Regelabweichung beeinflusst die Stellgröße. Bei einer Steuerung erfolgt keine fortlaufende Rückführung der Ausgangsgröße.'}
+    ,{id:'q14',subject:'elektro',topic:'Elektrische Grundgrößen zuordnen',type:'matching',difficulty:'Einfach',text:'Ordne jeder elektrischen Größe die passende Einheit zu.',pairs:['Spannung','Stromstärke','Widerstand'],options:['Volt (V)','Ampere (A)','Ohm (Ω)'],answer:[0,1,2],explanation:'Spannung wird in Volt, Stromstärke in Ampere und Widerstand in Ohm angegeben.'}
   ];
   const baseQuestionIds = new Set(questions.map(q => q.id));
   questions = questions.concat(state.customQuestions || []);
@@ -139,16 +143,40 @@
     const ex=state.exam;if(!ex) return renderExamConfig();
     const q=ex.questions[ex.index]; if(!q) return renderExamConfig();
     const selected=ex.answers[q.id];
-    const opts=q.type==='truefalse'?['Richtig','Falsch']:q.options;
-    const selectedIndex=q.type==='truefalse'?(selected===true?0:selected===false?1:null):selected;
-    const optsHtml=opts.map((o,i)=>{
-      let cls='answer-option'+(selectedIndex===i?' selected':'');
-      if(ex.checked && ex.mode==='learn') cls+=' '+(i===(q.type==='truefalse'?(q.answer?0:1):q.answer)?'correct':(selectedIndex===i?'wrong':''));
-      return '<button class="'+cls+'" data-action="answer" data-index="'+i+'" '+(ex.checked?'disabled':'')+'><span class="answer-letter">'+String.fromCharCode(65+i)+'</span><span>'+o+'</span></button>';
-    }).join('');
     const isLast=ex.index===ex.questions.length-1;
-    const feedback=ex.checked&&ex.mode==='learn'?'<div class="feedback '+(selectedIndex===(q.type==='truefalse'?(q.answer?0:1):q.answer)?'':'wrong')+'"><strong>'+(selectedIndex===(q.type==='truefalse'?(q.answer?0:1):q.answer)?'Richtig beantwortet':'Noch nicht ganz')+'</strong><p>'+q.explanation+'</p></div>':'';
-    return '<div class="exam-progress"><button class="text-link" data-action="exit-exam">← Runde verlassen</button><span>Frage '+(ex.index+1)+' von '+ex.questions.length+'</span><span>'+Object.keys(ex.answers).length+' beantwortet</span></div><div class="mini-progress" style="margin-bottom:20px"><span style="width:'+((ex.index+1)/ex.questions.length*100)+'%"></span></div><div class="panel question-card"><div style="display:flex;justify-content:space-between;gap:10px"><span class="pill blue">'+subjectName(q.subject)+'</span><span class="pill">'+q.difficulty+'</span><button class="button small" data-action="favorite-question" data-id="'+q.id+'">'+(state.favorites.includes(q.id)?'♥ Gemerkt':'♡ Merken')+'</button></div><div class="question-text">'+q.text+'</div><div class="answer-list">'+optsHtml+'</div>'+feedback+'<div class="lesson-actions"><button class="button" data-action="prev-question" '+(ex.index===0?'disabled':'')+'>Zurück</button>'+(ex.checked&&ex.mode==='learn'&&!isLast?'<button class="button primary" data-action="next-question">Nächste Frage →</button>':!ex.checked&&ex.mode==='learn'?'<button class="button primary" data-action="check-answer" '+(selectedIndex==null?'disabled':'')+'>Antwort prüfen</button>':isLast?'<button class="button primary" data-action="finish-exam">Auswertung anzeigen</button>':'<button class="button primary" data-action="next-question">Weiter →</button>')+'</div></div>';
+    let controlHtml='';
+    let isAnswered=selected!==undefined && selected!==null && selected!=='';
+    if(q.type==='calculation') {
+      controlHtml='<div class="field"><label class="field-label" for="exam-calculation">Dein Ergebnis ('+esc(q.unit||'')+')</label><input class="input-field" id="exam-calculation" type="number" step="any" value="'+esc(selected==null?'':selected)+'" placeholder="Ergebnis eingeben" '+(ex.checked?'disabled':'')+'></div>';
+    } else if(q.type==='text') {
+      controlHtml='<div class="field"><label class="field-label" for="exam-text">Deine Erklärung</label><textarea class="text-field" id="exam-text" placeholder="Formuliere deine Antwort in eigenen Worten …" '+(ex.checked?'disabled':'')+'>'+esc(selected||'')+'</textarea></div>';
+    } else if(q.type==='matching') {
+      controlHtml='<div class="answer-list">'+q.pairs.map((pair,i)=>'<div class="answer-option"><span class="answer-letter">'+(i+1)+'</span><span style="flex:1">'+esc(pair)+'</span><select class="select-field match-select" data-match-index="'+i+'" style="max-width:190px" '+(ex.checked?'disabled':'')+'><option value="">Zuordnen …</option>'+q.options.map((o,j)=>'<option value="'+j+'" '+(selected&&Number(selected[i])===j?'selected':'')+'>'+esc(o)+'</option>').join('')+'</select></div>').join('')+'</div>';
+      isAnswered=Array.isArray(selected)&&selected.length===q.pairs.length&&selected.every(v=>v!==null&&v!==undefined&&v!=='');
+    } else {
+      const opts=q.type==='truefalse'?['Richtig','Falsch']:q.options;
+      const selectedSet=Array.isArray(selected)?selected:[selected];
+      controlHtml='<div class="answer-list">'+opts.map((o,i)=>{
+        const chosen=selectedSet.includes(q.type==='truefalse'?(i===0):i);
+        let cls='answer-option'+(chosen?' selected':'');
+        if(ex.checked&&ex.mode==='learn') {
+          const correct=q.type==='truefalse'?(q.answer?0:1):q.type==='multiple'?q.answer:[q.answer];
+          const correctIndexes=Array.isArray(correct)?correct:[correct];
+          cls+=' '+(correctIndexes.includes(i)?'correct':(chosen?'wrong':''));
+        }
+        return '<button class="'+cls+'" data-action="answer" data-index="'+i+'" '+(ex.checked?'disabled':'')+'><span class="answer-letter">'+String.fromCharCode(65+i)+'</span><span>'+esc(o)+'</span></button>';
+      }).join('')+'</div>';
+      isAnswered=Array.isArray(selected)?selected.length>0:selected!==undefined;
+    }
+    let feedback='';
+    if(ex.checked&&ex.mode==='learn') {
+      const correct=answerIsCorrect(q,selected);
+      if(correct===null) feedback='<div class="feedback"><strong>Selbstkontrolle</strong><p>Vergleiche deine Erklärung mit der Musterlösung. Bei Freitextaufgaben ist in dieser Demo keine automatische Bewertung möglich.</p><p style="margin-top:8px"><strong>Musterlösung:</strong> '+esc(q.answer)+'</p><p style="margin-top:5px">'+esc(q.explanation)+'</p></div>';
+      else feedback='<div class="feedback '+(correct?'':'wrong')+'"><strong>'+(correct?'Richtig beantwortet':'Noch nicht ganz')+'</strong><p>'+esc(q.explanation)+'</p></div>';
+    }
+    const actionLabel=ex.checked&&ex.mode==='learn'&&!isLast?'Nächste Frage →':!ex.checked&&ex.mode==='learn'?'Antwort prüfen':isLast?'Auswertung anzeigen':'Weiter →';
+    const actionName=ex.checked&&ex.mode==='learn'&&!isLast?'next-question':!ex.checked&&ex.mode==='learn'?'check-answer':isLast?'finish-exam':'next-question';
+    return '<div class="exam-progress"><button class="text-link" data-action="exit-exam">← Runde verlassen</button><span>Frage '+(ex.index+1)+' von '+ex.questions.length+'</span><span>'+Object.keys(ex.answers).length+' beantwortet</span></div><div class="mini-progress" style="margin-bottom:20px"><span style="width:'+((ex.index+1)/ex.questions.length*100)+'%"></span></div><div class="panel question-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><span class="pill blue">'+subjectName(q.subject)+'</span><span class="pill">'+q.difficulty+'</span><button class="button small" data-action="favorite-question" data-id="'+q.id+'">'+(state.favorites.includes(q.id)?'♥ Gemerkt':'♡ Merken')+'</button></div><div class="question-text">'+esc(q.text)+'</div>'+controlHtml+feedback+'<div class="lesson-actions"><button class="button" data-action="prev-question" '+(ex.index===0?'disabled':'')+'>Zurück</button><button class="button primary" data-action="'+actionName+'" '+(!ex.checked&&ex.mode==='learn'&&!isAnswered?'disabled':'')+'>'+actionLabel+'</button></div></div>';
   }
   function renderFlashcards() {
     const c=cards[state.flashIndex%cards.length],revealed=state.flashRevealed;
@@ -210,15 +238,45 @@
   function currentQuestion(){return state.exam&&state.exam.questions[state.exam.index];}
   function chooseAnswer(index) {
     const ex=state.exam,q=currentQuestion(); if(!ex||ex.checked)return;
-    ex.answers[q.id]=q.type==='truefalse'?index===0:index;render();
+    if(q.type==='multiple') {
+      const selected=Array.isArray(ex.answers[q.id])?ex.answers[q.id].slice():[];
+      const pos=selected.indexOf(index);if(pos>=0)selected.splice(pos,1);else selected.push(index);
+      ex.answers[q.id]=selected;
+    } else ex.answers[q.id]=q.type==='truefalse'?index===0:index;
+    render();
   }
-  function answerIsCorrect(q,value){return q.type==='truefalse'?value===q.answer:value===q.answer;}
+  function answerIsCorrect(q,value) {
+    if(q.type==='text') return null;
+    if(q.type==='truefalse') return value===q.answer;
+    if(q.type==='calculation') {
+      if(value===undefined||value===null||String(value).trim()==='')return false;
+      const num=Number(String(value).replace(',','.'));
+      return Number.isFinite(num)&&Math.abs(num-Number(q.answer))<=Number(q.tolerance||0.001);
+    }
+    if(q.type==='multiple'||q.type==='matching') {
+      if(!Array.isArray(value))return false;
+      const a=value.slice().map(Number).sort((x,y)=>x-y);
+      const b=q.answer.slice().map(Number).sort((x,y)=>x-y);
+      return a.length===b.length&&a.every((v,i)=>v===b[i]);
+    }
+    return value===q.answer;
+  }
   function finishExam() {
     const ex=state.exam;if(!ex)return;
-    const details=ex.questions.map(q=>({id:q.id,subject:q.subject,correct:answerIsCorrect(q,ex.answers[q.id])}));
-    const correct=details.filter(d=>d.correct).length, score=Math.round(correct/details.length*100);
-    state.attempts.push({title:'Übungsrunde · '+(ex.mode==='learn'?'Lernmodus':'Testmodus'),date:new Intl.DateTimeFormat('de-DE').format(new Date()),correct:correct,total:details.length,score:score,details:details});
-    state.lastResult={correct,total:details.length,score,questions:ex.questions.map(q=>({q:q.text,explanation:q.explanation,correct:answerIsCorrect(q,ex.answers[q.id]),answer:q.type==='truefalse'?(q.answer?'Richtig':'Falsch'):q.options[q.answer],given:q.type==='truefalse'?(ex.answers[q.id]===true?'Richtig':ex.answers[q.id]===false?'Falsch':'Keine Antwort'):q.options[ex.answers[q.id]]}))};
+    const details=ex.questions.map(q=>({id:q.id,subject:q.subject,correct:answerIsCorrect(q,ex.answers[q.id]),manual:q.type==='text'}));
+    const graded=details.filter(d=>!d.manual),correct=graded.filter(d=>d.correct).length,score=graded.length?Math.round(correct/graded.length*100):0;
+    state.attempts.push({title:'Übungsrunde · '+(ex.mode==='learn'?'Lernmodus':'Testmodus'),date:new Intl.DateTimeFormat('de-DE').format(new Date()),correct:correct,total:graded.length,score:score,details:details});
+    state.lastResult={correct,total:graded.length,manual:details.filter(d=>d.manual).length,score,questions:ex.questions.map(q=>{
+      const value=ex.answers[q.id],correctness=answerIsCorrect(q,value);
+      let answer='',given='';
+      if(q.type==='truefalse'){answer=q.answer?'Richtig':'Falsch';given=value===true?'Richtig':value===false?'Falsch':'Keine Antwort';}
+      else if(q.type==='multiple'){answer=q.answer.map(i=>q.options[i]).join(', ');given=Array.isArray(value)?value.map(i=>q.options[i]).join(', '):'Keine Antwort';}
+      else if(q.type==='matching'){answer=q.pairs.map((p,i)=>p+' → '+q.options[q.answer[i]]).join(' · ');given=Array.isArray(value)?q.pairs.map((p,i)=>p+' → '+(q.options[value[i]]||'Offen')).join(' · '):'Keine Antwort';}
+      else if(q.type==='calculation'){answer=String(q.answer)+' '+(q.unit||'');given=value===undefined?'Keine Antwort':String(value)+' '+(q.unit||'');}
+      else if(q.type==='text'){answer=q.answer;given=value||'Keine Antwort';}
+      else {answer=q.options[q.answer];given=q.options[value]||'Keine Antwort';}
+      return {q:q.text,explanation:q.explanation,correct:correctness,manual:correctness===null,answer:answer,given:given};
+    })};
     state.exam=null;state.view='exam-result';renderResult();
   }
   function renderResult() {
@@ -275,7 +333,14 @@
     if(e.target.id==='chat-form'){e.preventDefault();const input=$('#chat-input'),text=input.value.trim();if(!text)return;state.chat.push({role:'user',text});state.chat.push({role:'assistant',text:assistantReply(text)});render();$('#chat-messages').scrollTop=$('#chat-messages').scrollHeight;}
     if(e.target.id==='admin-question-form'){e.preventDefault();const q={id:'custom-'+Date.now(),subject:$('#new-subject').value,topic:$('#new-topic').value.trim(),type:'single',difficulty:$('#new-level').value,text:$('#new-question').value.trim(),options:[$('#new-a').value,$('#new-b').value,$('#new-c').value,$('#new-d').value],answer:Number($('#new-correct').value),explanation:$('#new-explanation').value.trim()||'Keine zusätzliche Erklärung hinterlegt.'};questions.push(q);state.customQuestions=state.customQuestions||[];state.customQuestions.push(q);e.target.reset();toast('Frage wurde lokal hinzugefügt.');render();}
   });
+  document.addEventListener('input',function(e){
+    if(!state.exam||state.exam.checked)return;
+    const q=currentQuestion();
+    if(e.target.id==='exam-calculation')state.exam.answers[q.id]=e.target.value;
+    if(e.target.id==='exam-text')state.exam.answers[q.id]=e.target.value;
+  });
   document.addEventListener('change',function(e){
+    if(e.target.classList.contains('match-select')&&state.exam&&!state.exam.checked){const q=currentQuestion(),idx=Number(e.target.dataset.matchIndex),values=Array.isArray(state.exam.answers[q.id])?state.exam.answers[q.id].slice():[];values[idx]=e.target.value===''?null:Number(e.target.value);state.exam.answers[q.id]=values;save();}
     if(e.target.id==='theme-select'){state.theme=e.target.value;applyTheme();save();toast('Darstellung aktualisiert.');}
     if(e.target.id==='user-name'){state.userName=e.target.value.trim()||'Alex';render();}
     if(e.target.id==='question-import'&&e.target.files[0]){const file=e.target.files[0],reader=new FileReader();reader.onload=()=>{try{const imported=JSON.parse(reader.result);if(!Array.isArray(imported))throw new Error('JSON muss ein Fragen-Array enthalten.');const additions=imported.map((q,i)=>Object.assign({},q,{id:q.id||'import-'+Date.now()+'-'+i}));questions=questions.concat(additions);state.customQuestions=(state.customQuestions||[]).concat(additions);save();toast(imported.length+' Fragen importiert.');render();}catch(err){toast('Import fehlgeschlagen: '+err.message);}};reader.readAsText(file);}
