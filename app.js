@@ -63,6 +63,7 @@
     {id:'q9',subject:'wiso',topic:'Sozialversicherung',type:'single',difficulty:'Einfach',text:'Welcher Versicherungszweig ist insbesondere für Arbeits- und Wegeunfälle zuständig?',options:['Rentenversicherung','Unfallversicherung','Arbeitslosenversicherung','Pflegeversicherung'],answer:1,explanation:'Die gesetzliche Unfallversicherung ist für Arbeits- und Wegeunfälle zuständig.'},
     {id:'q10',subject:'wiso',topic:'Lohn und Gehalt',type:'truefalse',difficulty:'Einfach',text:'Das Nettoentgelt ist in der Regel höher als das Bruttoentgelt.',answer:false,explanation:'Das Nettoentgelt ist der Auszahlungsbetrag nach Abzug von Steuern und Arbeitnehmeranteilen.'}
   ];
+  questions = questions.concat(state.customQuestions || []);
   const cards = [
     {id:'c1',front:'Wie lautet das Ohmsche Gesetz?',back:'U = R · I. Umgestellt: I = U / R und R = U / I.',subject:'elektro'},
     {id:'c2',front:'In welcher Schaltung ist der Strom überall gleich?',back:'In einer Reihenschaltung.',subject:'elektro'},
@@ -73,7 +74,7 @@
     {id:'c7',front:'Was bedeutet 1 kΩ?',back:'1 000 Ω (ein Kiloohm).',subject:'mathe'},
     {id:'c8',front:'Welche fünf Zweige umfasst die Sozialversicherung?',back:'Kranken-, Pflege-, Renten-, Arbeitslosen- und Unfallversicherung.',subject:'wiso'}
   ];
-  const defaultState = {view:'dashboard',theme:'system',completed:[],favorites:[],attempts:[],flashIndex:0,flashRevealed:false,flashKnown:[],userName:'Alex',chat:[],exam:null,settingsTab:'appearance'};
+  const defaultState = {view:'dashboard',theme:'system',completed:[],favorites:[],attempts:[],flashIndex:0,flashRevealed:false,flashKnown:[],userName:'Alex',chat:[],exam:null,settingsTab:'appearance',customQuestions:[]};
   let state = loadState();
   function loadState() {
     try { return Object.assign({}, defaultState, JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')); }
@@ -115,7 +116,7 @@
   function renderModules() {
     const cardsHtml = modules.map(m => {
       const n=m.lessons.filter(l=>state.completed.includes(l.id)).length,p=Math.round(n/m.lessons.length*100);
-      return '<article class="module-card" data-module="'+m.id+'"><div class="module-card-top"><span class="subject-icon" style="background:'+m.color+';color:'+m.ink+'">'+(subjects.find(s=>s.id===m.id).icon)+'</span><span class="pill">'+m.level+'</span></div><h3>'+m.title+'</h3><p>'+m.description+'</p><div class="module-meta"><span>'+n+' / '+m.lessons.length+' Kapitel</span><span>'+p+' %</span></div><div class="mini-progress"><span style="width:'+p+'%"></span></div><div style="margin-top:14px;color:var(--muted);font-size:10px">◷ '+m.duration+' <span style="float:right;color:var(--accent);font-weight:600">Öffnen →</span></div></article>';
+      return '<article class="module-card" data-module="'+m.id+'"><div class="module-card-top"><span class="subject-icon" style="background:'+m.color+';color:'+m.ink+'">'+(subjects.find(s=>s.id===m.id).icon)+'</span><div style="display:flex;gap:6px;align-items:center"><span class="pill">'+m.level+'</span><button class="icon-button" data-action="favorite-module" data-id="'+m.id+'" aria-label="Modul merken" title="Modul merken">♡</button></div></div><h3>'+m.title+'</h3><p>'+m.description+'</p><div class="module-meta"><span>'+n+' / '+m.lessons.length+' Kapitel</span><span>'+p+' %</span></div><div class="mini-progress"><span style="width:'+p+'%"></span></div><div style="margin-top:14px;color:var(--muted);font-size:10px">◷ '+m.duration+' <span style="float:right;color:var(--accent);font-weight:600">Öffnen →</span></div></article>';
     }).join('');
     return pageHead('WISSEN AUFBAUEN','Lernmodule','Strukturiere dein Wissen in vier Fachbereichen – vom Grundlagenwissen bis zur Prüfungsvorbereitung.')+'<div class="grid module-grid">'+cardsHtml+'</div><div class="notice" style="margin-top:18px">Die Lerninhalte sind redaktionell erstellte Beispielinhalte für diese Demo. Prüfe fachliche und normative Details immer anhand aktueller Ausbildungsunterlagen und gültiger Regelwerke.</div>';
   }
@@ -220,6 +221,7 @@
     state.exam=null;state.view='exam-result';renderResult();
   }
   function renderResult() {
+    state.view='results';
     const r=state.lastResult;if(!r){state.view='results';render();return;}
     $('#view').innerHTML=pageHead('ÜBUNG ABGESCHLOSSEN','Gut gemacht!','Hier ist deine Auswertung. Nutze die Erklärungen, um gezielt weiterzulernen.')+'<div class="panel" style="max-width:850px;margin:0 auto"><div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:22px"><div class="stat-value" style="font-size:48px;color:var(--accent)">'+r.score+'<span style="font-size:19px">%</span></div><div><h2>'+r.correct+' von '+r.total+' Fragen richtig</h2><p class="page-subtitle">Diese Auswertung ist eine Lernhilfe, keine offizielle Prüfungsnote.</p></div></div>'+r.questions.map((q,i)=>'<div class="recommendation"><div class="recommendation-icon" style="color:'+(q.correct?'var(--green)':'var(--red)')+'">'+(q.correct?'✓':'×')+'</div><div><strong>'+esc(q.q)+'</strong><p>Deine Antwort: '+esc(q.given||'Keine Antwort')+' · Lösung: '+esc(q.answer)+'</p><p style="margin-top:4px">'+esc(q.explanation)+'</p></div></div>').join('')+'<div class="lesson-actions"><button class="button" data-view="results">Zur Auswertung</button><button class="button primary" data-view="exam">Neue Übungsrunde</button></div></div>';
     $('#breadcrumb-current').textContent='Auswertung';save();
@@ -242,11 +244,12 @@
   }
   document.addEventListener('click',function(e){
     const viewBtn=e.target.closest('[data-view]'); if(viewBtn){openView(viewBtn.dataset.view);return;}
-    const moduleCard=e.target.closest('[data-module]:not([data-action])'); if(moduleCard){state.currentModule=moduleCard.dataset.module;state.view='module-detail';render();return;}
+    const moduleCard=e.target.closest('[data-module]:not([data-action])'); if(moduleCard && !e.target.closest('[data-action]')){state.currentModule=moduleCard.dataset.module;state.view='module-detail';render();return;}
     const action=e.target.closest('[data-action]'); if(!action)return;
     const a=action.dataset.action;
     if(a==='continue'){const m=modules.find(x=>x.lessons.some(l=>!state.completed.includes(l.id)))||modules[0];const l=m.lessons.find(x=>!state.completed.includes(x.id))||m.lessons[0];state.currentModule=m.id;state.currentLesson=l.id;state.view='lesson';render();}
     if(a==='open-module'){state.currentModule=action.dataset.module;state.view='module-detail';render();}
+    if(a==='favorite-module'){toggleFavorite(action.dataset.id);}
     if(a==='open-lesson'){state.currentModule=action.dataset.module;state.currentLesson=action.dataset.lesson;state.view='lesson';render();}
     if(a==='complete-lesson'){const id=action.dataset.lesson;if(!state.completed.includes(id))state.completed.push(id);toast('Kapitel als abgeschlossen markiert.');render();}
     if(a==='start-exam')startExam();
@@ -260,7 +263,7 @@
     if(a==='flash-next'||a==='flash-known'||a==='flash-unknown'){if(a==='flash-known'){const id=cards[state.flashIndex%cards.length].id;if(!state.flashKnown.includes(id))state.flashKnown.push(id);}state.flashIndex=(state.flashIndex+1)%cards.length;state.flashRevealed=false;render();}
     if(a==='flash-prev'){state.flashIndex=(state.flashIndex-1+cards.length)%cards.length;state.flashRevealed=false;render();}
     if(a==='remove-favorite')toggleFavorite(action.dataset.id);
-    if(a==='delete-question'){if(confirm('Diese lokal gespeicherte Frage entfernen?')){questions=questions.filter(q=>q.id!==action.dataset.id);toast('Frage entfernt.');render();}}
+    if(a==='delete-question'){if(confirm('Diese lokal gespeicherte Frage entfernen?')){questions=questions.filter(q=>q.id!==action.dataset.id);state.customQuestions=(state.customQuestions||[]).filter(q=>q.id!==action.dataset.id);toast('Frage entfernt.');render();}}
     if(a==='export-questions'){download('azubi-academy-fragen.json',JSON.stringify(questions,null,2),'application/json');}
     if(a==='export-progress'){download('azubi-academy-lernstand.json',JSON.stringify(state,null,2),'application/json');}
     if(a==='reset-data'){if(confirm('Alle lokalen Lernstände, Favoriten und Ergebnisse zurücksetzen?')){localStorage.removeItem(STORAGE_KEY);state=Object.assign({},defaultState);toast('Lokale Daten wurden zurückgesetzt.');render();}}
@@ -268,12 +271,12 @@
   });
   document.addEventListener('submit',function(e){
     if(e.target.id==='chat-form'){e.preventDefault();const input=$('#chat-input'),text=input.value.trim();if(!text)return;state.chat.push({role:'user',text});state.chat.push({role:'assistant',text:assistantReply(text)});render();$('#chat-messages').scrollTop=$('#chat-messages').scrollHeight;}
-    if(e.target.id==='admin-question-form'){e.preventDefault();const q={id:'custom-'+Date.now(),subject:$('#new-subject').value,topic:$('#new-topic').value.trim(),type:'single',difficulty:$('#new-level').value,text:$('#new-question').value.trim(),options:[$('#new-a').value,$('#new-b').value,$('#new-c').value,$('#new-d').value],answer:Number($('#new-correct').value),explanation:$('#new-explanation').value.trim()||'Keine zusätzliche Erklärung hinterlegt.'};questions.push(q);e.target.reset();toast('Frage wurde lokal hinzugefügt.');render();}
+    if(e.target.id==='admin-question-form'){e.preventDefault();const q={id:'custom-'+Date.now(),subject:$('#new-subject').value,topic:$('#new-topic').value.trim(),type:'single',difficulty:$('#new-level').value,text:$('#new-question').value.trim(),options:[$('#new-a').value,$('#new-b').value,$('#new-c').value,$('#new-d').value],answer:Number($('#new-correct').value),explanation:$('#new-explanation').value.trim()||'Keine zusätzliche Erklärung hinterlegt.'};questions.push(q);state.customQuestions=state.customQuestions||[];state.customQuestions.push(q);e.target.reset();toast('Frage wurde lokal hinzugefügt.');render();}
   });
   document.addEventListener('change',function(e){
     if(e.target.id==='theme-select'){state.theme=e.target.value;applyTheme();save();toast('Darstellung aktualisiert.');}
     if(e.target.id==='user-name'){state.userName=e.target.value.trim()||'Alex';render();}
-    if(e.target.id==='question-import'&&e.target.files[0]){const file=e.target.files[0],reader=new FileReader();reader.onload=()=>{try{const imported=JSON.parse(reader.result);if(!Array.isArray(imported))throw new Error('JSON muss ein Fragen-Array enthalten.');questions=questions.concat(imported.map((q,i)=>Object.assign({},q,{id:q.id||'import-'+Date.now()+'-'+i})));toast(imported.length+' Fragen importiert.');render();}catch(err){toast('Import fehlgeschlagen: '+err.message);}};reader.readAsText(file);}
+    if(e.target.id==='question-import'&&e.target.files[0]){const file=e.target.files[0],reader=new FileReader();reader.onload=()=>{try{const imported=JSON.parse(reader.result);if(!Array.isArray(imported))throw new Error('JSON muss ein Fragen-Array enthalten.');const additions=imported.map((q,i)=>Object.assign({},q,{id:q.id||'import-'+Date.now()+'-'+i}));questions=questions.concat(additions);state.customQuestions=(state.customQuestions||[]).concat(additions);save();toast(imported.length+' Fragen importiert.');render();}catch(err){toast('Import fehlgeschlagen: '+err.message);}};reader.readAsText(file);}
     if(e.target.id==='admin-file'&&e.target.files[0])$('#file-preview').textContent='Ausgewählt: '+e.target.files[0].name+' ('+Math.round(e.target.files[0].size/1024)+' KB). In dieser Demo nur lokal ausgewählt, nicht hochgeladen.';
   });
   document.addEventListener('click',function(e){
