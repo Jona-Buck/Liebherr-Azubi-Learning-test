@@ -715,3 +715,12 @@ h3 { margin-bottom: 6px; font-size: 16px; letter-spacing: -.025em; font-weight: 
   .question-card { padding: 21px; }
   .question-card .question-text { font-size: 19px; }
 }
+
+
+/* final polish: platform-native font fallback and inline SVG sizing */
+:root { --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif; }
+.nav-icon svg { width: 18px; height: 18px; }
+.icon-button svg { width: 18px; height: 18px; display: block; }
+.search-trigger svg { width: 16px; height: 16px; display: block; }
+.continue-card:after { z-index: 0; }
+.continue-copy { position: relative; z-index: 1; }
