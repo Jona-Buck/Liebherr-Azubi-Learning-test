@@ -63,6 +63,7 @@
     {id:'q9',subject:'wiso',topic:'Sozialversicherung',type:'single',difficulty:'Einfach',text:'Welcher Versicherungszweig ist insbesondere für Arbeits- und Wegeunfälle zuständig?',options:['Rentenversicherung','Unfallversicherung','Arbeitslosenversicherung','Pflegeversicherung'],answer:1,explanation:'Die gesetzliche Unfallversicherung ist für Arbeits- und Wegeunfälle zuständig.'},
     {id:'q10',subject:'wiso',topic:'Lohn und Gehalt',type:'truefalse',difficulty:'Einfach',text:'Das Nettoentgelt ist in der Regel höher als das Bruttoentgelt.',answer:false,explanation:'Das Nettoentgelt ist der Auszahlungsbetrag nach Abzug von Steuern und Arbeitnehmeranteilen.'}
   ];
+  const baseQuestionIds = new Set(questions.map(q => q.id));
   questions = questions.concat(state.customQuestions || []);
   const cards = [
     {id:'c1',front:'Wie lautet das Ohmsche Gesetz?',back:'U = R · I. Umgestellt: I = U / R und R = U / I.',subject:'elektro'},
@@ -147,7 +148,7 @@
     }).join('');
     const isLast=ex.index===ex.questions.length-1;
     const feedback=ex.checked&&ex.mode==='learn'?'<div class="feedback '+(selectedIndex===(q.type==='truefalse'?(q.answer?0:1):q.answer)?'':'wrong')+'"><strong>'+(selectedIndex===(q.type==='truefalse'?(q.answer?0:1):q.answer)?'Richtig beantwortet':'Noch nicht ganz')+'</strong><p>'+q.explanation+'</p></div>':'';
-    return '<div class="exam-progress"><button class="text-link" data-action="exit-exam">← Runde verlassen</button><span>Frage '+(ex.index+1)+' von '+ex.questions.length+'</span><span>'+Object.keys(ex.answers).length+' beantwortet</span></div><div class="mini-progress" style="margin-bottom:20px"><span style="width:'+((ex.index+1)/ex.questions.length*100)+'%"></span></div><div class="panel question-card"><div style="display:flex;justify-content:space-between;gap:10px"><span class="pill blue">'+subjectName(q.subject)+'</span><span class="pill">'+q.difficulty+'</span></div><div class="question-text">'+q.text+'</div><div class="answer-list">'+optsHtml+'</div>'+feedback+'<div class="lesson-actions"><button class="button" data-action="prev-question" '+(ex.index===0?'disabled':'')+'>Zurück</button>'+(ex.checked&&ex.mode==='learn'&&!isLast?'<button class="button primary" data-action="next-question">Nächste Frage →</button>':!ex.checked&&ex.mode==='learn'?'<button class="button primary" data-action="check-answer" '+(selectedIndex==null?'disabled':'')+'>Antwort prüfen</button>':isLast?'<button class="button primary" data-action="finish-exam">Auswertung anzeigen</button>':'<button class="button primary" data-action="next-question">Weiter →</button>')+'</div></div>';
+    return '<div class="exam-progress"><button class="text-link" data-action="exit-exam">← Runde verlassen</button><span>Frage '+(ex.index+1)+' von '+ex.questions.length+'</span><span>'+Object.keys(ex.answers).length+' beantwortet</span></div><div class="mini-progress" style="margin-bottom:20px"><span style="width:'+((ex.index+1)/ex.questions.length*100)+'%"></span></div><div class="panel question-card"><div style="display:flex;justify-content:space-between;gap:10px"><span class="pill blue">'+subjectName(q.subject)+'</span><span class="pill">'+q.difficulty+'</span><button class="button small" data-action="favorite-question" data-id="'+q.id+'">'+(state.favorites.includes(q.id)?'♥ Gemerkt':'♡ Merken')+'</button></div><div class="question-text">'+q.text+'</div><div class="answer-list">'+optsHtml+'</div>'+feedback+'<div class="lesson-actions"><button class="button" data-action="prev-question" '+(ex.index===0?'disabled':'')+'>Zurück</button>'+(ex.checked&&ex.mode==='learn'&&!isLast?'<button class="button primary" data-action="next-question">Nächste Frage →</button>':!ex.checked&&ex.mode==='learn'?'<button class="button primary" data-action="check-answer" '+(selectedIndex==null?'disabled':'')+'>Antwort prüfen</button>':isLast?'<button class="button primary" data-action="finish-exam">Auswertung anzeigen</button>':'<button class="button primary" data-action="next-question">Weiter →</button>')+'</div></div>';
   }
   function renderFlashcards() {
     const c=cards[state.flashIndex%cards.length],revealed=state.flashRevealed;
@@ -224,7 +225,7 @@
     state.view='results';
     const r=state.lastResult;if(!r){state.view='results';render();return;}
     $('#view').innerHTML=pageHead('ÜBUNG ABGESCHLOSSEN','Gut gemacht!','Hier ist deine Auswertung. Nutze die Erklärungen, um gezielt weiterzulernen.')+'<div class="panel" style="max-width:850px;margin:0 auto"><div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:22px"><div class="stat-value" style="font-size:48px;color:var(--accent)">'+r.score+'<span style="font-size:19px">%</span></div><div><h2>'+r.correct+' von '+r.total+' Fragen richtig</h2><p class="page-subtitle">Diese Auswertung ist eine Lernhilfe, keine offizielle Prüfungsnote.</p></div></div>'+r.questions.map((q,i)=>'<div class="recommendation"><div class="recommendation-icon" style="color:'+(q.correct?'var(--green)':'var(--red)')+'">'+(q.correct?'✓':'×')+'</div><div><strong>'+esc(q.q)+'</strong><p>Deine Antwort: '+esc(q.given||'Keine Antwort')+' · Lösung: '+esc(q.answer)+'</p><p style="margin-top:4px">'+esc(q.explanation)+'</p></div></div>').join('')+'<div class="lesson-actions"><button class="button" data-view="results">Zur Auswertung</button><button class="button primary" data-view="exam">Neue Übungsrunde</button></div></div>';
-    $('#breadcrumb-current').textContent='Auswertung';save();
+    $('#breadcrumb-current').textContent='Auswertung';$('.nav-item[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view==='results'));save();
   }
   function assistantReply(text) {
     const t=text.toLowerCase();
@@ -250,6 +251,7 @@
     if(a==='continue'){const m=modules.find(x=>x.lessons.some(l=>!state.completed.includes(l.id)))||modules[0];const l=m.lessons.find(x=>!state.completed.includes(x.id))||m.lessons[0];state.currentModule=m.id;state.currentLesson=l.id;state.view='lesson';render();}
     if(a==='open-module'){state.currentModule=action.dataset.module;state.view='module-detail';render();}
     if(a==='favorite-module'){toggleFavorite(action.dataset.id);}
+    if(a==='favorite-question'){toggleFavorite(action.dataset.id);}
     if(a==='open-lesson'){state.currentModule=action.dataset.module;state.currentLesson=action.dataset.lesson;state.view='lesson';render();}
     if(a==='complete-lesson'){const id=action.dataset.lesson;if(!state.completed.includes(id))state.completed.push(id);toast('Kapitel als abgeschlossen markiert.');render();}
     if(a==='start-exam')startExam();
@@ -266,7 +268,7 @@
     if(a==='delete-question'){if(confirm('Diese lokal gespeicherte Frage entfernen?')){questions=questions.filter(q=>q.id!==action.dataset.id);state.customQuestions=(state.customQuestions||[]).filter(q=>q.id!==action.dataset.id);toast('Frage entfernt.');render();}}
     if(a==='export-questions'){download('azubi-academy-fragen.json',JSON.stringify(questions,null,2),'application/json');}
     if(a==='export-progress'){download('azubi-academy-lernstand.json',JSON.stringify(state,null,2),'application/json');}
-    if(a==='reset-data'){if(confirm('Alle lokalen Lernstände, Favoriten und Ergebnisse zurücksetzen?')){localStorage.removeItem(STORAGE_KEY);state=Object.assign({},defaultState);toast('Lokale Daten wurden zurückgesetzt.');render();}}
+    if(a==='reset-data'){if(confirm('Alle lokalen Lernstände, Favoriten und Ergebnisse zurücksetzen?')){localStorage.removeItem(STORAGE_KEY);state=Object.assign({},defaultState);questions=questions.filter(q=>baseQuestionIds.has(q.id));toast('Lokale Daten wurden zurückgesetzt.');render();}}
     if(a==='settings-tab'){state.settingsTab=action.dataset.tab;render();}
   });
   document.addEventListener('submit',function(e){
